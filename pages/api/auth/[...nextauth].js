@@ -1,6 +1,11 @@
-import NextAuth from "next-auth"
-import SpotifyProvider from "next-auth/providers/spotify"
+import NextAuth from "next-auth";
+import SpotifyProvider from "next-auth/providers/spotify";
 
+/**
+ * Takes a token, and returns a new token with updated
+ * `accessToken` and `accessTokenExpires`. If an error occurs,
+ * returns the old token and an error property
+ */
 async function refreshAccessToken(token) {
   try {
     const url =
@@ -10,19 +15,19 @@ async function refreshAccessToken(token) {
         client_secret: process.env.SPOTIFY_CLIENT_SECRET,
         grant_type: "refresh_token",
         refresh_token: token.refreshToken,
-      })
+      });
 
     const response = await fetch(url, {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
       method: "POST",
-    })
+    });
 
-    const refreshedTokens = await response.json()
+    const refreshedTokens = await response.json();
 
     if (!response.ok) {
-      throw refreshedTokens
+      throw refreshedTokens;
     }
 
     return {
@@ -30,20 +35,18 @@ async function refreshAccessToken(token) {
       accessToken: refreshedTokens.access_token,
       accessTokenExpires: Date.now() + refreshedTokens.expires_in * 1000,
       refreshToken: refreshedTokens.refresh_token ?? token.refreshToken, // Fall back to old refresh token
-    }
+    };
   } catch (error) {
-    console.log(error)
+    console.log(error);
 
     return {
       ...token,
       error: "RefreshAccessTokenError",
-    }
+    };
   }
 }
 
-
 export default NextAuth({
-  // Configure one or more authentication providers
   providers: [
     SpotifyProvider({
       clientId: process.env.SPOTIFY_CLIENT_ID,
@@ -51,11 +54,12 @@ export default NextAuth({
       authorization:
         "https://accounts.spotify.com/authorize?scope=user-read-email,playlist-read-private,user-read-email,streaming,user-read-private,user-library-read,user-library-modify,user-read-playback-state,user-modify-playback-state,user-read-recently-played,user-follow-read",
     }),
-    // ...add more providers here
   ],
+  secret: process.env.JWT_SECRET,
   pages: {
-    signIn: "auth/signin",
+      signIn:"/auth/signin",
   },
+
   callbacks: {
     async jwt({ token, user, account }) {
       // Initial sign in
@@ -65,23 +69,23 @@ export default NextAuth({
           accessTokenExpires: Date.now() + account.expires_in * 1000,
           refreshToken: account.refresh_token,
           user,
-        }
+        };
       }
 
       // Return previous token if the access token has not expired yet
       if (Date.now() < token.accessTokenExpires) {
-        return token
+        return token;
       }
 
       // Access token has expired, try to update it
-      return refreshAccessToken(token)
+      return refreshAccessToken(token);
     },
     async session({ session, token }) {
-      session.user = token.user
-      session.accessToken = token.accessToken
-      session.error = token.error
+      session.user = token.user;
+      session.accessToken = token.accessToken;
+      session.error = token.error;
 
-      return session
+      return session;
     },
   },
-})
+});

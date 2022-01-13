@@ -1,18 +1,20 @@
-import {useRecoilState} from "recoil";
-import {playingTrackState, playState} from "../atoms/playerAtom";
+import { useRecoilState } from "recoil";
+import { playingTrackState, playState } from "../atoms/playerAtom";
 
-function RecentlyPlayed({track, chooseTrack}) {
-    const [play, setPlay] = useRecoilState(playState);
-    const [playingTrack, setPlayingTrack] = useRecoilState(playingTrackState);
+function RecentlyPlayed({ track, chooseTrack }) {
+  const [play, setPlay] = useRecoilState(playState);
+  const [playingTrack, setPlayingTrack] = useRecoilState(playingTrackState);
 
-    const handlePlay = () => {
-        chooseTrack(track)
-        if(track.uri === playingTrack.uri){
-            setPlay(!play);
-        }
+  const handlePlay = () => {
+    chooseTrack(track);
+
+    if (track.uri === playingTrack.uri) {
+      setPlay(!play);
     }
-    return (
-        <div className="flex items-center space-x-3" onClick={handlePlay}>
+  };
+
+  return (
+    <div className="flex items-center space-x-3" onClick={handlePlay}>
       <img
         src={track.albumUrl}
         alt=""
@@ -27,7 +29,7 @@ function RecentlyPlayed({track, chooseTrack}) {
         </p>
       </div>
     </div>
-    )
+  );
 }
 
 export default RecentlyPlayed;
